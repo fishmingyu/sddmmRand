@@ -14,14 +14,16 @@ unsigned long Size;
 template <typename T>
 unsigned long readCOO(std::string file, std::vector<int> &row_indices,
              std::vector<int> &col_indices, std::vector<T> &values);
-void COO_to_CSR(std::vector<int> &row_CSR, std::vector<int> row_COO, unsigned long Size);
+void COO_to_CSR(std::vector<int> &row_CSR,
+                std::vector<int> row_COO, unsigned long Size, int matrixRow);
 
 int main()
 {
+    int matrixRow = 30;
     Size = readCOO<float>(file, row_COO, col_IND, values);
     S_csrColInd = (int*)malloc(Size * sizeof(int));
     S_csrVal = (float*)malloc(Size * sizeof(float));
-    COO_to_CSR(row_CSR, row_COO, Size);
+    COO_to_CSR(row_CSR, row_COO, Size, matrixRow);
     S_csrRowPtr = (int*)malloc(row_CSR.size() * sizeof(int));
     std::copy(row_CSR.begin(), row_CSR.end(), S_csrRowPtr);
     std::copy(col_IND.begin(), col_IND.end(), S_csrColInd);
@@ -74,15 +76,27 @@ unsigned long readCOO(std::string file, std::vector<int> &row_indices,
 }
 
 
-void COO_to_CSR(std::vector<int> &row_CSR, std::vector<int> row_COO, unsigned long Size)
+void COO_to_CSR(std::vector<int> &row_CSR, std::vector<int> row_COO,
+                unsigned long Size, int matrixRow)
 {
     row_CSR.push_back(0);
-    for(int i = 0;i < Size;i++)
+    for(int i = 0;i < (Size - 1) && row_COO[i] <= row_COO[i + 1];i++)
     {
-        if(row_COO[i] < row_COO[i + 1])
+        if(row_COO[i] == row_COO[i + 1] + 1)
         {
             row_CSR.push_back(i + 1);
         }
+        else if(row_COO[i] < row_COO[i + 1] + 1)
+        {
+            for(int j = 0;j < (row_COO[i + 1]- row_COO[i]);j++)
+            {
+                row_CSR.push_back(i + 1);
+            }
+        }
+    }
+    while(row_CSR.size() < matrixRow + 1)
+    {
+        row_CSR.push_back(row_CSR.back());
     }
 }
 
