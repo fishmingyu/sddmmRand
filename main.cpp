@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 #include <vector>
 #include <string>
 
@@ -13,35 +14,35 @@ unsigned long Size;
 
 template <typename T>
 unsigned long readCOO(std::string file, std::vector<int> &row_indices,
-             std::vector<int> &col_indices, std::vector<T> &values);
+             std::vector<int> &col_indices, std::vector<T> &values,
+                      int &matrixRow, int &matrixCol);
 void COO_to_CSR(std::vector<int> &row_CSR,
                 std::vector<int> row_COO, unsigned long Size, int matrixRow);
 
 int main()
 {
-    int matrixRow = 30;
-    Size = readCOO<float>(file, row_COO, col_IND, values);
+    int matrixRow, matrixCol;
+    Size = readCOO<float>(file, row_COO, col_IND, values, matrixRow, matrixCol);
     S_csrColInd = (int*)malloc(Size * sizeof(int));
     S_csrVal = (float*)malloc(Size * sizeof(float));
+    std::sort(row_COO.begin(), row_COO.end());
     COO_to_CSR(row_CSR, row_COO, Size, matrixRow);
     S_csrRowPtr = (int*)malloc(row_CSR.size() * sizeof(int));
     std::copy(row_CSR.begin(), row_CSR.end(), S_csrRowPtr);
     std::copy(col_IND.begin(), col_IND.end(), S_csrColInd);
     std::copy(values.begin(), values.end(), S_csrVal);
+    for(int i = 0;i < row_COO.size();i++)
+    {
+        std::cout << row_COO[i] << " ";
+    }
+    std::cout << std::endl;
     for(int i = 0;i < row_CSR.size();i++)
     {
         std::cout << S_csrRowPtr[i] << " ";
     }
+    if(row_CSR.size() != matrixRow + 1)
+        std::cout << "error!" << std::endl;
     std::cout << std::endl;
-    for(int i = 0;i < col_IND.size();i++)
-    {
-        std::cout << S_csrColInd[i] << " ";
-    }
-    std::cout << std::endl;
-    for(int i = 0;i < values.size();i++)
-    {
-        std::cout << S_csrVal[i] << " ";
-    }
     free(S_csrVal);
     free(S_csrRowPtr);
     free(S_csrColInd);
@@ -51,7 +52,8 @@ int main()
 //test for
 template <typename T>
 unsigned long readCOO(std::string file, std::vector<int> &row_indices,
-             std::vector<int> &col_indices, std::vector<T> &values)
+             std::vector<int> &col_indices, std::vector<T> &values,
+                      int &matrixRow, int &matrixCol)
 {
     int col_element, row_element;
     float value;
@@ -60,10 +62,11 @@ unsigned long readCOO(std::string file, std::vector<int> &row_indices,
         std::cerr << "cannot open the file!\n";
     else
     {
+        fm >> matrixRow >> matrixCol;
         do
         {
-            fm >> row_element;
             fm >> col_element;
+            fm >> row_element;
             fm >> value;
             if(fm.fail())
                 break;
@@ -79,24 +82,21 @@ unsigned long readCOO(std::string file, std::vector<int> &row_indices,
 void COO_to_CSR(std::vector<int> &row_CSR, std::vector<int> row_COO,
                 unsigned long Size, int matrixRow)
 {
-    row_CSR.push_back(0);
-    for(int i = 0;i < (Size - 1) && row_COO[i] <= row_COO[i + 1];i++)
+    if(row_COO[0] != 0)
     {
-        if(row_COO[i] == row_COO[i + 1] + 1)
+        for(int j = 0;j < row_COO[0];j++)
+            row_CSR.push_back(0);
+    }
+    for(int i = 0;i < (Size - 1);i++)
+    {
+        for(int j = 0;j < row_COO[i + 1] - row_COO[i];j++)
         {
             row_CSR.push_back(i + 1);
         }
-        else if(row_COO[i] < row_COO[i + 1] + 1)
-        {
-            for(int j = 0;j < (row_COO[i + 1]- row_COO[i]);j++)
-            {
-                row_CSR.push_back(i + 1);
-            }
-        }
     }
-    while(row_CSR.size() < matrixRow + 1)
+    for(int j = 0;j < matrixRow + 1- row_COO.back();j++)
     {
-        row_CSR.push_back(row_CSR.back());
+        row_CSR.push_back(static_cast<int>(Size));
     }
 }
 
