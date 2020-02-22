@@ -14,14 +14,18 @@ class COO:
         else:
             return self.value
 
-def Key(x):
-    return x.row
+def Cmp(x, y):
+    if x.row != y.row:
+        return int(x.row - y.row)
+    else:
+        return int(x.col - y.col)
     
+
 # generate sddmm
 
-N = 200  # cols for sparse matrix S
-M = 100  # rows for sparse matrix S
-K = 100  # the cols for D1 & D2 transposed
+N = 20  # cols for sparse matrix S
+M = 10  # rows for sparse matrix S
+K = 10  # the cols for D1 & D2 transposed
 
 Density=0.1
 matrixformat='coo'
@@ -61,7 +65,7 @@ fo.write("%d %d %d %d\n" % (M, N, K, eleSize))
 for i in range(0, np.size(B.col)):
     info = COO(B.row[i], B.col[i], B.data[i])
     list.append(info)
-list.sort(key=Key)
+list.sort(cmp=Cmp)
 for i in list:
     fo.write("%s %s %s\n" % (i[0],i[1],i[2]))
 fo.close()
@@ -87,7 +91,7 @@ list = []
 for i in range(0, np.size(Scoo.col)):
     info = COO(Scoo.row[i], Scoo.col[i], Scoo.data[i])
     list.append(info)
-list.sort(key=Key)
+list.sort(cmp=Cmp)
 # print the right answer of sddmm
 for i in list:
     f1.write("%s\n" % (i[2]))
