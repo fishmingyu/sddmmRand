@@ -1,5 +1,6 @@
 from scipy import sparse
 import numpy as np
+import functools
 
 class COO:
     def __init__(self, row, col, value):
@@ -14,12 +15,6 @@ class COO:
         else:
             return self.value
 
-def Cmp(x, y):
-    if x.row != y.row:
-        return int(x.row - y.row)
-    else:
-        return int(x.col - y.col)
-    
 
 # generate sddmm
 
@@ -65,7 +60,7 @@ fo.write("%d %d %d %d\n" % (M, N, K, eleSize))
 for i in range(0, np.size(B.col)):
     info = COO(B.row[i], B.col[i], B.data[i])
     list.append(info)
-list.sort(cmp=Cmp)
+list.sort(key=lambda s:(s[0],s[1])) 
 for i in list:
     fo.write("%s %s %s\n" % (i[0],i[1],i[2]))
 fo.close()
@@ -91,7 +86,7 @@ list = []
 for i in range(0, np.size(Scoo.col)):
     info = COO(Scoo.row[i], Scoo.col[i], Scoo.data[i])
     list.append(info)
-list.sort(cmp=Cmp)
+list.sort(key=lambda s:(s[0],s[1])) 
 # print the right answer of sddmm
 for i in list:
     f1.write("%s\n" % (i[2]))
