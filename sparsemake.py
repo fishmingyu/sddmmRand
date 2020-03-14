@@ -18,11 +18,11 @@ class COO:
 
 # generate sddmm
 
-N = 20  # cols for sparse matrix S
-M = 10  # rows for sparse matrix S
-K = 10  # the cols for D1 & D2 transposed
+N = 25000  # cols for sparse matrix S
+M = 25000 # rows for sparse matrix S
+K = 1000  # the cols for D1 & D2 transposed
 
-Density=0.1
+Density=0.0001
 matrixformat='coo'
 eleSize = M * N * Density
 B = sparse.rand(M,N, density = Density, format = matrixformat, dtype = None)
