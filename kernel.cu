@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
     data* O_cooVal = 0;
     data* S_cooVal = 0;
     data* csrGoldenC = 0;
-    data* cooGoldenC = 0;
+    //data* cooGoldenC = 0;
     data* csrGoldenPy = 0;
     data* cooGoldenPy = 0;
 
@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
     csrGoldenPy = (data*)malloc((eleSize) * sizeof(csrGoldenPy[0]));
 
     O_cooVal = (data*)malloc(eleSize * sizeof(data));
-    cooGoldenC = (data*)malloc((eleSize) * sizeof(csrGoldenPy[0]));
+    //cooGoldenC = (data*)malloc((eleSize) * sizeof(csrGoldenPy[0]));
     cooGoldenPy = (data*)malloc((eleSize) * sizeof(csrGoldenPy[0]));
 
     if (!S_csrVal || !S_csrColInd || !S_csrRowPtr || !D1_dnVal 
@@ -201,8 +201,7 @@ int main(int argc, char* argv[])
     checkCudaError(cudaMalloc((void**)&dev_ScsrVal, eleSize * sizeof(dev_ScsrVal[0])));
     checkCudaError(cudaMalloc((void**)&dev_cooRowInd,  eleSize * sizeof(dev_cooRowInd[0])));
     checkCudaError(cudaMalloc((void**)&dev_cooColInd, eleSize * sizeof(dev_cooColInd[0])));
-    checkCudaError(cudaMalloc((void**)&dev_ScsrVal, eleSize * sizeof(dev_ScsrVal[0])));
-    checkCudaError(cudaMalloc((void**)&dev_ScooVal, eleSize * sizeof(dev_ScsrVal[0])));
+    checkCudaError(cudaMalloc((void**)&dev_ScooVal, eleSize * sizeof(dev_ScooVal[0])));
     checkCudaError(cudaMalloc((void**)&dev_D1, S_mrows * D_kcols * sizeof(dev_D1[0])));
     checkCudaError(cudaMalloc((void**)&dev_D2, S_ncols * D_kcols * sizeof(dev_D2[0])));
     checkCudaError(cudaMalloc((void**)&dev_Ocsr, eleSize * sizeof(dev_Ocsr[0])));
@@ -326,7 +325,7 @@ int main(int argc, char* argv[])
             break;
         }
     }
-
+ 
     checkCudaError(cudaMemset((void*)dev_Ocoo, 0, eleSize * sizeof(dev_Ocoo[0])));
     sddmmWrapper<data, COOILP8CacheCastNext4, BLOCKDIMZ>(S_mrows, D_kcols, eleSize, dev_cooRowInd, dev_cooColInd, dev_D1, dev_D2, dev_Ocoo, dev_ScooVal);
     checkCudaError(cudaMemcpy(O_cooVal, dev_Ocoo, eleSize * sizeof(dev_Ocoo[0]), cudaMemcpyDeviceToHost));
@@ -334,17 +333,6 @@ int main(int argc, char* argv[])
         if (fabs(O_cooVal[id] - cooGoldenPy[id]) > 1e-3) {
             std::cout << "WA: O[" << id << "] = " << O_cooVal[id] << ", golden = " << cooGoldenPy[id] << '\n';
             std::cout << "the error in COOILP8CacheCastNext4" << std::endl;
-            break;
-        }
-    }
-
-    checkCudaError(cudaMemset((void*)dev_Ocoo, 0, eleSize * sizeof(dev_Ocoo[0])));
-    sddmmWrapper<data, COOILP16CacheCast, BLOCKDIMZ>(S_mrows, D_kcols, eleSize, dev_cooRowInd, dev_cooColInd, dev_D1, dev_D2, dev_Ocoo, dev_ScooVal);
-    checkCudaError(cudaMemcpy(O_cooVal, dev_Ocoo, eleSize * sizeof(dev_Ocoo[0]), cudaMemcpyDeviceToHost));
-    for (int id = 0; id < eleSize; ++id) {
-        if (fabs(O_cooVal[id] - cooGoldenPy[id]) > 1e-3) {
-            std::cout << "WA: O[" << id << "] = " << O_cooVal[id] << ", golden = " << cooGoldenPy[id] << '\n';
-            std::cout << "the error in COOILP16" << std::endl;
             break;
         }
     }
@@ -632,6 +620,7 @@ int main(int argc, char* argv[])
         sddmmWrapper<data, COOILP4CacheCastNext4, BLOCKDIMZ>(S_mrows, D_kcols, eleSize, dev_cooRowInd, dev_cooColInd, dev_D1, dev_D2, dev_Ocoo, dev_ScooVal);
     }
 
+/*
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&time, start, stop);
@@ -703,7 +692,7 @@ int main(int argc, char* argv[])
     cudaEventElapsedTime(&time, start, stop);
     time /= ITER;
     timeSort.push_back(timeStruct(time, "CSRPar"));
-    */
+  */
 
     time = 0;
     cudaEventRecord(start, 0);

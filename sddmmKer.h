@@ -1547,6 +1547,7 @@ __global__ void sddmmCOOILP4CacheCastNext4(int S_mrows, int D_kcols, const unsig
     }
 }
 
+
 template<typename T>
 __global__ void sddmmCOOILP8CacheCast(int S_mrows, const int D_kcols, const unsigned long Size,
     int* S_cooRowInd, int* S_cooColInd, T* D1_dnVal,
@@ -1785,6 +1786,8 @@ __global__ void sddmmCOOILP8CacheCast(int S_mrows, const int D_kcols, const unsi
     }
 }
 
+
+
 template<typename T>
 __global__ void sddmmCOOILP8CacheCastNext(int S_mrows, const int D_kcols, const unsigned long Size,
     int* S_cooRowInd, int* S_cooColInd, T* D1_dnVal,
@@ -1923,6 +1926,8 @@ __global__ void sddmmCOOILP8CacheCastNext(int S_mrows, const int D_kcols, const 
         }
     }
 }
+
+
 
 template<typename T>
 __global__ void sddmmCOOILP8CacheCastNext4(int S_mrows, const int D_kcols, const unsigned long Size,
@@ -2084,155 +2089,6 @@ __global__ void sddmmCOOILP8CacheCastNext4(int S_mrows, const int D_kcols, const
     }
 }
 
-//deprecate
-template<typename T>
-__global__ void sddmmCOOILP16CacheCast(int S_mrows, const int D_kcols, const unsigned long Size,
-    int* S_cooRowInd, int* S_cooColInd, T* D1_dnVal,
-    T* D2_dnVal, T* O_cooVal, T* S_cooVal)
-{
-    __shared__ T temp[512];
-    const int eid = (blockIdx.x) << 4;
-    const int cid = threadIdx.x;
-    temp[(cid % 256) << 1] = 0;
-    temp[((cid % 256) << 1) + 1] = 0;
-    __syncthreads();
-    T multi[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-    if (eid < Size - 15)
-    {
-        int4 tempRow1 = *(reinterpret_cast<int4 *> (S_cooRowInd + eid));
-        int4 tempCol1 = *(reinterpret_cast<int4 *> (S_cooColInd + eid));
-        multi[0] = D1_dnVal[tempRow1.x * D_kcols + cid] * D2_dnVal[tempCol1.x * D_kcols + cid] * S_cooVal[eid];
-        multi[1] = D1_dnVal[tempRow1.y * D_kcols + cid] * D2_dnVal[tempCol1.y * D_kcols + cid] * S_cooVal[eid + 1];
-        multi[2] = D1_dnVal[tempRow1.z * D_kcols + cid] * D2_dnVal[tempCol1.z * D_kcols + cid] * S_cooVal[eid + 2];
-        multi[3] = D1_dnVal[tempRow1.w * D_kcols + cid] * D2_dnVal[tempCol1.w * D_kcols + cid] * S_cooVal[eid + 3];
-        tempRow1 = *(reinterpret_cast<int4 *> (S_cooRowInd + eid + 4));
-        tempCol1 = *(reinterpret_cast<int4 *> (S_cooColInd + eid + 4));
-        multi[4] = D1_dnVal[tempRow1.x * D_kcols + cid] * D2_dnVal[tempCol1.x * D_kcols + cid] * S_cooVal[eid + 4];
-        multi[5] = D1_dnVal[tempRow1.y * D_kcols + cid] * D2_dnVal[tempCol1.y * D_kcols + cid] * S_cooVal[eid + 5];
-        multi[6] = D1_dnVal[tempRow1.z * D_kcols + cid] * D2_dnVal[tempCol1.z * D_kcols + cid] * S_cooVal[eid + 6];
-        multi[7] = D1_dnVal[tempRow1.w * D_kcols + cid] * D2_dnVal[tempCol1.w * D_kcols + cid] * S_cooVal[eid + 7];
-        tempRow1 = *(reinterpret_cast<int4 *> (S_cooRowInd + eid + 8));
-        tempCol1 = *(reinterpret_cast<int4 *> (S_cooColInd + eid + 8));
-        multi[8] = D1_dnVal[tempRow1.x * D_kcols + cid] * D2_dnVal[tempCol1.x * D_kcols + cid] * S_cooVal[eid + 8];
-        multi[9] = D1_dnVal[tempRow1.y * D_kcols + cid] * D2_dnVal[tempCol1.y * D_kcols + cid] * S_cooVal[eid + 9];
-        multi[10] = D1_dnVal[tempRow1.z * D_kcols + cid] * D2_dnVal[tempCol1.z * D_kcols + cid] * S_cooVal[eid + 10];
-        multi[11] = D1_dnVal[tempRow1.w * D_kcols + cid] * D2_dnVal[tempCol1.w * D_kcols + cid] * S_cooVal[eid + 11];
-        tempRow1 = *(reinterpret_cast<int4 *> (S_cooRowInd + eid + 12));
-        tempCol1 = *(reinterpret_cast<int4 *> (S_cooColInd + eid + 12));
-        multi[12] = D1_dnVal[tempRow1.x * D_kcols + cid] * D2_dnVal[tempCol1.x * D_kcols + cid] * S_cooVal[eid + 12];
-        multi[13] = D1_dnVal[tempRow1.y * D_kcols + cid] * D2_dnVal[tempCol1.y * D_kcols + cid] * S_cooVal[eid + 13];
-        multi[14] = D1_dnVal[tempRow1.z * D_kcols + cid] * D2_dnVal[tempCol1.z * D_kcols + cid] * S_cooVal[eid + 14];
-        multi[15] = D1_dnVal[tempRow1.w * D_kcols + cid] * D2_dnVal[tempCol1.w * D_kcols + cid] * S_cooVal[eid + 15];
-
-        __syncthreads();
-        atomicAdd(&temp[cid % 32], multi[0]);
-        atomicAdd(&temp[cid % 32 + 32], multi[1]);
-        atomicAdd(&temp[cid % 32 + 64], multi[2]);
-        atomicAdd(&temp[cid % 32 + 96], multi[3]); 
-        atomicAdd(&temp[cid % 32 + 128], multi[4]);
-        atomicAdd(&temp[cid % 32 + 160], multi[5]);
-        atomicAdd(&temp[cid % 32 + 192], multi[6]);
-        atomicAdd(&temp[cid % 32 + 224], multi[7]);
-        atomicAdd(&temp[cid % 32 + 256], multi[8]);
-        atomicAdd(&temp[cid % 32 + 288], multi[9]);
-        atomicAdd(&temp[cid % 32 + 320], multi[10]);
-        atomicAdd(&temp[cid % 32 + 352], multi[11]);
-        atomicAdd(&temp[cid % 32 + 384], multi[12]); 
-        atomicAdd(&temp[cid % 32 + 416], multi[13]);
-        atomicAdd(&temp[cid % 32 + 448], multi[14]);
-        atomicAdd(&temp[cid % 32 + 480], multi[15]);
-        __syncthreads();
-        if(threadIdx.x < 32)
-        {
-            multi[0] = temp[threadIdx.x];
-            multi[1] = temp[threadIdx.x + 32];
-            multi[2] = temp[threadIdx.x + 64];
-            multi[3] = temp[threadIdx.x + 96];
-            multi[4] = temp[threadIdx.x + 128];
-            multi[5] = temp[threadIdx.x + 160];
-            multi[6] = temp[threadIdx.x + 192];
-            multi[7] = temp[threadIdx.x + 224];
-            multi[8] = temp[threadIdx.x + 256];
-            multi[9] = temp[threadIdx.x + 288];
-            multi[10] = temp[threadIdx.x + 320];
-            multi[11] = temp[threadIdx.x + 352];
-            multi[12] = temp[threadIdx.x + 384];
-            multi[13] = temp[threadIdx.x + 416];
-            multi[14] = temp[threadIdx.x + 448];
-            multi[15] = temp[threadIdx.x + 480];
-            for (int stride = 16; stride > 0; stride >>= 1)
-            {
-                multi[0] += __shfl_down_sync(0xffffffff, multi[0], stride, 32);
-                multi[1] += __shfl_down_sync(0xffffffff, multi[1], stride, 32);
-                multi[2] += __shfl_down_sync(0xffffffff, multi[2], stride, 32);
-                multi[3] += __shfl_down_sync(0xffffffff, multi[3], stride, 32);
-                multi[4] += __shfl_down_sync(0xffffffff, multi[4], stride, 32);
-                multi[5] += __shfl_down_sync(0xffffffff, multi[5], stride, 32);
-                multi[6] += __shfl_down_sync(0xffffffff, multi[6], stride, 32);
-                multi[7] += __shfl_down_sync(0xffffffff, multi[7], stride, 32);
-                multi[8] += __shfl_down_sync(0xffffffff, multi[8], stride, 32);
-                multi[9] += __shfl_down_sync(0xffffffff, multi[9], stride, 32);
-                multi[10] += __shfl_down_sync(0xffffffff, multi[10], stride, 32);
-                multi[11] += __shfl_down_sync(0xffffffff, multi[11], stride, 32);
-                multi[12] += __shfl_down_sync(0xffffffff, multi[12], stride, 32);
-                multi[13] += __shfl_down_sync(0xffffffff, multi[13], stride, 32);
-                multi[14] += __shfl_down_sync(0xffffffff, multi[14], stride, 32);
-                multi[15] += __shfl_down_sync(0xffffffff, multi[15], stride, 32);
-            }
-        }
-        if(threadIdx.x == 0)
-        {
-            *(reinterpret_cast<float4*>(O_cooVal + eid)) = *(reinterpret_cast<float4*>(multi));
-            *(reinterpret_cast<float4*>(O_cooVal + eid + 4)) = *(reinterpret_cast<float4*>(multi + 4));
-            *(reinterpret_cast<float4*>(O_cooVal + eid + 8)) = *(reinterpret_cast<float4*>(multi + 8));
-            *(reinterpret_cast<float4*>(O_cooVal + eid + 12)) = *(reinterpret_cast<float4*>(multi + 12));
-        }
-    }
-    else
-    {
-        int residue = Size % 16;
-        for (int i = 0; i < residue; i++)
-        {
-            multi[i] = D1_dnVal[S_cooRowInd[eid + i] * D_kcols + cid] * D2_dnVal[S_cooColInd[eid + i] * D_kcols + cid] * S_cooVal[eid + i];
-        }
-#pragma unroll 4
-        for (int i = 0; i < residue; i++)
-        {
-            atomicAdd(&O_cooVal[eid + i], multi[i]);
-        }
-    }
-}
-
-/*
-//a little optimized by share memory
-template<typename T>
-__global__ void sddmmCOOCacheKernel(int S_mrows, int D_kcols, const unsigned long Size,
-    int* S_cooRowInd, int* S_cooColInd, T* D1_dnVal,
-    T* D2_dnVal, T* O_cooVal, T* S_cooVal)
-{
-    extern __shared__ T multi[];
-    const int eid = blockIdx.x;
-    const int cid = threadIdx.x + threadIdx.y * blockDim.x;
-    if (cid < D_kcols)
-    {
-        int offset1, offset2;
-        offset1 = S_cooRowInd[eid] * D_kcols;
-        offset2 = S_cooColInd[eid] * D_kcols;
-        atomicAdd(&multi[eid], D1_dnVal[offset1 + threadIdx.x] * D2_dnVal[offset2 + threadIdx.x] * S_cooVal[eid]);
-        __syncthreads();
-        int i = blockDim.x / 2;
-        while (i != 0)
-        {
-            if (cacheIdx < i)
-                multi[cacheIdx] += multi[cacheIdx + i];
-            __syncthreads();
-            i /= 2;
-        }
-        if (cacheIdx == 0)
-            dotArr[blockIdx.y] = cache[0];
-    }
-}
-*/
 
 
 template<typename T>
@@ -2420,7 +2276,7 @@ enum ProcMethod //processing method for sddmm
     COOILP8CacheCast,
     COOILP8CacheCastNext,
     COOILP8CacheCastNext4,
-    COOILP16CacheCast,
+    //COOILP16CacheCast,
     COOILP2ShReduc,
     COOILP2ShReducEX,
     COOILP4LoopShReduc,
@@ -2508,12 +2364,13 @@ void sddmmWrapper(
         sddmmCOOILP8CacheCastNext4<T> << <dim3(QUOCEIL(eleSize, 8), 1, 1), dim3(QUOCEIL(D_kcols, 4), 1, 1) >> > (
             S_mrows, D_kcols, eleSize, S_csrRowPtr, S_csrColInd, D1_dnVal, D2_dnVal, O_csrVal, S_csrVal);
         break;
-
+    //deprecated
+    /*
     case COOILP16CacheCast:
         sddmmCOOILP16CacheCast<T> << <dim3(QUOCEIL(eleSize, 16), 1, 1), dim3(D_kcols, 1, 1) >> > (
             S_mrows, D_kcols, eleSize, S_csrRowPtr, S_csrColInd, D1_dnVal, D2_dnVal, O_csrVal, S_csrVal);
         break;
-
+    */
     case COOReduction:
         sddmmCOOReductionSimpleKernel<T> <<<dim3(eleSize, 1, 1), dim3(512, QUOCEIL(D_kcols, 512), 1), sizeOfShare>>> (
             S_mrows, D_kcols, eleSize, S_csrRowPtr, S_csrColInd, D1_dnVal, D2_dnVal, O_csrVal, S_csrVal);
